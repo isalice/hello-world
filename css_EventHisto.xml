@@ -1,0 +1,15 @@
+<srcSchema _cs="Archived events (css)" created="2019-11-18 12:13:55.447Z" createdBy-id="0"
+           desc="" entitySchema="xtk:srcSchema" extendedSchema="nms:eventHisto" img=""
+           label="Archived events" labelSingular="Archived event" lastModified="2019-11-18 12:18:57.213Z"
+           mappingType="sql" md5="2043F8B55877B823A31DA628EAD351FA" modifiedBy-id="0"
+           name="eventHisto" namespace="css" xtkschema="xtk:srcSchema">
+  <createdBy _cs="Isabelle (Isabelle)"/>
+  <modifiedBy _cs="Isabelle (Isabelle)"/>
+  <element label="Archived events" labelSingular="Archived event" name="eventHisto">
+    <element label="Recipient" name="recipient" target="nms:recipient" type="link">
+      <join _operation="delete" xpath-dst="@account" xpath-src="@externalId"/>
+
+    </element>
+  </element>
+
+</srcSchema>
