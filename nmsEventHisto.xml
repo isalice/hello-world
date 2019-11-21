@@ -1,0 +1,33 @@
+<srcSchema entitySchema="xtk:srcSchema" label="Archived events" labelSingular="Archived event"
+           md5="1A1107D99CFF8F549330D77190E34412" name="eventHisto" namespace="nms"
+           xtkschema="xtk:srcSchema">
+  <element autopk="false" folderModel="" name="eventHisto" template="nms:rtEvent">
+    <key name="id">
+      <keyfield xpath="@id"/>
+    </key>
+
+    <attribute label="Identifier" name="id" type="int64"/>
+
+    <attribute _operation="delete" name="eventHistoId"/>
+
+    <element _operation="delete" name="folder"/>
+
+    <!-- Default link to recipient -->
+    <element externalJoin="true" integrity="normal" label="Recipient" name="recipient"
+             revExternalJoin="true" revIntegrity="neutral" target="nms:recipient"
+             type="link">
+      <join xpath-dst="@account" xpath-src="@externalId"/>
+    </element>
+  </element>
+
+  <methods>
+    <method name="GetMirrorUrl" static="true">
+      <parameters>
+        <param inout="in" name="eventHistoId" type="int64"/>
+        <param inout="out" name="mirrorUrl" type="string"/>
+      </parameters>
+    </method>
+    <method library="nms:messageCenter.js" name="PushEvent" static="true"/>
+    <method library="nms:messageCenter.js" name="PushEvents" static="true"/>
+  </methods>
+</srcSchema>
