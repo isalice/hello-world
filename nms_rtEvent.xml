@@ -1,0 +1,152 @@
+<srcSchema entitySchema="xtk:srcSchema" genAccessors="false" label="Real time events"
+           labelSingular="Real time event" md5="49937C4B032B83457261ABEA623E8CED"
+           name="rtEvent" namespace="nms" xtkschema="xtk:srcSchema">
+
+    <enumeration basetype="byte" default="pending" name="status">
+        <value img="nms:waiting.png" label="Pending" name="pending" value="0"/>
+        <value img="nms:prepare.png" label="Pending delivery" name="processing" value="1"/>
+        <value img="nms:finished.png" label="Sent" name="processed" value="2"/>
+
+        <!-- value > 10: failure reason -->
+        <value img="xtk:logwarn.png" label="Ignored by the delivery" name="ignored" value="11"/>
+        <value img="xtk:logerr.png" label="Delivery error" name="deliveryFailed" value="12"/>
+        <value img="xtk:logerr.png" label="Event not covered" name="routingFailed" value="13"/>
+        <value img="xtk:logerr.png" label="Event expired" name="tooOld" value="14"/>
+    </enumeration>
+
+    <element autopk="true" folderModel="nmsRtEvent" label="Real time events" labelSingular="Real time event"
+             name="rtEvent" pkSequence="NmsMcEventId" pkgStatus="never">
+
+        <dbindex name="lastModified">
+            <keyfield xpath="@lastModified"/>
+        </dbindex>
+
+        <dbindex name="type">
+            <keyfield xpath="@type"/>
+        </dbindex>
+
+        <dbindex name="status">
+            <keyfield xpath="@status"/>
+        </dbindex>
+
+        <dbindex name="scheduled">
+            <keyfield xpath="@scheduled"/>
+        </dbindex>
+
+        <attribute defOnDuplicate="true" enum="status" label="Status" name="status" type="byte"/>
+        <attribute defOnDuplicate="true" label="Number of errors" name="retry" type="byte"/>
+
+        <!-- The 3 following dates can be provided by the caller -->
+        <attribute defOnDuplicate="true" desc="Submission date" label="Submitted on"
+                   name="submit" type="datetime"/>
+        <attribute defOnDuplicate="true" default="GetDate()" desc="Requested processing date"
+                   label="Process requested on" name="scheduled" type="datetime"/>
+        <attribute desc="Expiry date" label="Expired on" name="expiration" type="datetime"/>
+
+        <!-- Internal dates tracing the process -->
+        <attribute default="GetDate()" desc="Creation date" label="Created on" name="created"
+                   type="datetime"/>
+        <attribute defOnDuplicate="true" desc="Processing start date" label="Process started on"
+                   name="processing" type="datetime"/>
+        <attribute defOnDuplicate="true" desc="Processing date" label="Processed on"
+                   name="processed" type="datetime"/>
+
+        <attribute desc="Last modified on" label="Modified on" name="lastModified" type="datetime"/>
+
+        <!-- Various durations -->
+        <attribute expr="SecondsDiff(@created, @submit)" label="Caller queue time (s)"
+                   name="callerQueueTime" type="long"/>
+        <attribute expr="SecondsDiff(@processing, @created)" label="Message Center queue time (s)"
+                   name="neolaneQueueTime" type="long"/>
+        <attribute expr="SecondsDiff(@processed, @processing)" label="Delivery duration (s)"
+                   name="deliveryTime" type="long"/>
+        <attribute expr="SecondsDiff(@processed, @created)" label="Internal processing time (s)"
+                   name="internalProcessingTime" type="long"/>
+        <attribute expr="SecondsDiff(@processed, @submit)" label="Total processing time (s)"
+                   name="totalProcessingTime" type="long"/>
+
+
+        <!--<attribute dbEnum="eventType" label="Type d'événement" name="type" type="string"/>-->
+        <attribute label="Event type" length="64" name="type" type="string"/>
+        <element defOnDuplicate="true" desc="Transactional message template" externalJoin="true"
+                 label="Template" name="delivery" target="nms:delivery" type="link"/>
+        <attribute enum="nms:delivery:messageType" label="Channel" name="wishedChannel"
+                   type="byte"/>
+        <!--<attribute label="Priorité souhaitée" name="wishedPriority" type="short"/>-->
+
+        <attribute desc="External event identifier" label="External identifier" length="64"
+                   name="externalId" type="string"/>
+        <attribute applicableIf="HasPackage('nms:line') OR HasPackage('nms:lineV2') OR HasPackage('nms:messageCenterExec')"
+                   desc="Event MID ID" label="MID ID" length="128" name="mLineId" type="string"/>
+        <attribute desc="Application which created the event" label="Origin" length="64"
+                   name="origin" type="string"/>
+
+        <attribute dataPolicy="none" desc="Recipient email address" label="Email" name="email"
+                   template="xtk:common:email"/>
+        <attribute default="0" desc="Email format type" enum="nms:recipient:messageFormat"
+                   label="Email format" name="emailFormat" type="byte"/>
+
+        <attribute applicableIf="HasPackage('nms:mobile') OR HasPackage('nms:messageCenterExec')"
+                   desc="Recipient mobile number" label="Mobile number" name="mobilePhone"
+                   template="xtk:common:mobilePhone"/>
+
+        <!-- Android/IOS -->
+        <attribute applicableIf="HasPackage('nms:mobileApp')" name="registrationToken"
+                   template="nms:appSubscription:appSubscription/@registrationToken"/>
+        <attribute advanced="true" applicableIf="HasPackage('nms:mobileApp')" expr="@registrationToken"
+                   label="ID of the iOS device" name="ios"/>
+        <attribute advanced="true" applicableIf="HasPackage('nms:mobileApp')" expr="@registrationToken"
+                   label="ID of the Android device" name="android"/>
+        <element applicableIf="HasPackage('nms:mobileApp')" label="Mobile application"
+                 name="mobileApp" target="nms:mobileApp" type="link"/>
+
+        <!--<attribute name="deviceAddress" type="string" length="128"/>-->
+        <element applicableIf="HasPackage('nms:paper') OR HasPackage('nms:messageCenterExec')"
+                 label="Postal address" name="postalAddress" template="nms:common:postalAddress">
+            <attribute _operation="delete" name="addrQuality"/>
+            <attribute _operation="delete" name="addrErrorCount"/>
+            <attribute _operation="delete" name="addrLastCheck"/>
+        </element>
+        <attribute advanced="true" label="Country code" length="2" name="countryCode"
+                   type="string"/>
+        <element externalJoin="true" label="Country/Region" name="country" revLink="state"
+                 target="nms:country" type="link">
+            <join xpath-dst="@isoA2" xpath-src="@countryCode"/>
+        </element>
+
+        <attribute desc="Preferred language of the recipient" label="Language" length="32"
+                   name="language" type="string" userEnum="language"/>
+        <!--<attribute name="contactTimeZone" template="xtk:common:timezone" default="CurrentTimeZone()"/>-->
+
+        <!-- eventHistoId = rtEventId + cellId*(2^56) -->
+        <attribute desc="Identifier of the archived event version" expr="$(options:NmsExecutionInstanceId)*72057594037927936 + @id"
+                   label="Archived event identifier" name="eventHistoId" type="int64"/>
+
+        <element label="Event XML" name="ctx" type="ANY" xml="true"/>
+
+        <element defOnDuplicate="true" default="DefaultFolder('nmsRtEvent', [@_folder-id])"
+                 label="Folder" name="folder" required="true" revDesc="Real time events included in this folder"
+                 revIntegrity="define" revLabel="Real time event" target="xtk:folder"
+                 type="link"/>
+        <element defOnDuplicate="true" name="createdBy" template="xtk:common:createdBy"/>
+    </element>
+
+    <methods>
+        <method name="PushEvent" static="true">
+            <help>Insert an event.</help>
+            <parameters>
+                <param desc="Event." inout="in" name="event" type="DOMDocument"/>
+                <param desc="Technical identifier of the inserted event" inout="out" name="id"
+                       type="int64"/>
+            </parameters>
+        </method>
+        <method name="PushEvents" static="true">
+            <help>Insert a collection of events.</help>
+            <parameters>
+                <param desc="Collection of events." inout="in" name="eventCollection" type="DOMDocument"/>
+                <param desc="Collection containing the combination of the external and internal identifiers used during insertion."
+                       inout="out" name="ids" type="DOMDocument"/>
+            </parameters>
+        </method>
+    </methods>
+</srcSchema>
